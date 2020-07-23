@@ -77,6 +77,10 @@ from pyPI.preprocessing.filters import IQRFilter
 
 # Define features
 features = ['alp', 'alt', 'bil', 'cre', 'crp', 'wbc']
+features = ['alb', 'alp', 'alt', 'baso', 'bil', 'cl', 'cre', 'crp', 'egfr',
+                  'eos', 'hct', 'hgb', 'k', 'ly', 'mch', 'mchc', 'mcv', 'mono',
+                  'mpv', 'neut', 'nrbca', 'plt', 'rbc', 'rdw', 'sodium', 'urea', 'wbc']
+features = ['hct', 'hgb', 'k', 'ly', 'mch', 'mchc', 'mcv', 'mono', 'neut', 'wbc']
 
 # Filter data by features
 data = data[features]
@@ -174,6 +178,7 @@ axes[1].text(x=0.01, y=0.01, s=str(data.describe()), fontdict={'family':'monospa
 axes[1].set_xticks([])
 axes[1].set_yticks([])
 
+axes[0].get_legend().remove()
 plt.xticks(rotation=45)
 plt.suptitle("Comparison of imputation methods")
 plt.tight_layout()

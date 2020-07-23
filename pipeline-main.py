@@ -112,6 +112,10 @@ _DEFAULT_ESTIMATOR_GRID = {
 
 _DEFAULT_FEATURES = {
     '6': sorted(['alp', 'alt', 'bil', 'cre', 'crp', 'wbc']),
+    '7': sorted(['alp', 'alt', 'bil', 'cre', 'crp', 'wbc', 'pct']),
+    '21': sorted(['alb', 'alp', 'alt', 'baso', 'bil', 'cl', 'cre', 'crp', 'egfr',
+                  'eos', 'k', 'ly',  'mcv', 'mono', 'mpv', 'nrbca', 'plt', 'rbc',
+                  'rdw',  'urea', 'wbc']),
     '27': sorted(['alb', 'alp', 'alt', 'baso', 'bil', 'cl', 'cre', 'crp', 'egfr',
                   'eos', 'hct', 'hgb', 'k', 'ly', 'mch', 'mchc', 'mcv', 'mono',
                   'mpv', 'neut', 'nrbca', 'plt', 'rbc', 'rdw', 'sodium', 'urea', 'wbc'])
@@ -120,7 +124,7 @@ _DEFAULT_FEATURES = {
 # data constants
 # ------------------------------
 # Define feature group
-slug = '6'
+slug = '21'
 
 # Feature vector
 features = _DEFAULT_FEATURES[slug]
@@ -157,7 +161,7 @@ spl = 'skfold'
 # create targets to compute
 # ------------------------------
 # Create targets
-estimators = ['svm']
+estimators = ['ann']
 
 # Create tests
 tests = ['HOS', 'HOSbal']
