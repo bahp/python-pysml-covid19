@@ -1,3 +1,24 @@
+# --------------------------------------
+# Added manually
+# --------------------------------------
+# Specific to this project
+**/data/covid19/raw/
+
+# MacOSX
+**/*.DS_Store
+
+# Django
+**/*.sqlite3
+**/*.pyc
+
+# PyCharm
+**/.idea/*
+
+# PySML
+**/outputs/**/data/
+**/iterations
+# -------------------------------------
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
