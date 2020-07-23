@@ -4,6 +4,9 @@
 # Specific to this project
 **/data/covid19/raw/
 
+# Excel
+**/~*.xlsx
+
 # MacOSX
 **/*.DS_Store
 
