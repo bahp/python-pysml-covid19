@@ -10,30 +10,48 @@ import matplotlib.pyplot as plt
 # ---------------------
 sns.set(style="whitegrid")
 
-# ---------------
+# Automatic save
+auto_save = False
+
+# Consider those biomarkers with are present in
+# more than n_sample profiles. To see this number
+# execute plot_biomarkers_availability.py
+n_samples = 8000
+
+# This columns should be removed from the loaded dataset
+# to respect the requirements of the plotting code as
+# stated below.
+drop_columns = ['_uid', 'date_result']
+
+# -----------------
 # Read data
-# ---------------
-# Load pandas dataframe
-data = pd.read_csv('./data/covid19/one_line_values_pathology.csv')
+# -----------------
+# Read
+data = pd.read_csv('./data/covid19/daily_profiles.csv')
 # Columns to lowercase
 data.columns = [c.lower() for c in data.columns]
+# Drop columns
+data = data.drop(columns=drop_columns)
 
+
+# ------------------------------------
+# Print brief summary
+# ------------------------------------
 # General variables
-biomarkers = data.columns[5:]
+biomarkers = list(data.columns[:-2])
 n_profiles = len(data)
 n_biomarkers = (len(biomarkers))
 
 # Show information
-print("\n{0}\n{1}\n{2}".format("-"*40, "Report", "-"*40))
+print("\n{0}\n{1}\n{2}".format("-" * 40, "Report", "-" * 40))
 print("Number of rows: %s" % n_profiles)
 print("Number of biomarkers: %s" % n_biomarkers)
+print("List of biomarkers:\n%s" % data.columns.values)
+
 
 # --------------------------
 # Get most common biomarkers
 # --------------------------
-# Configuration
-n_samples = 8000
-
 # Create frequency dataframe
 frequency = pd.DataFrame()
 frequency['count'] = data[biomarkers].count()
@@ -75,7 +93,8 @@ plt.suptitle('Correlation of biomarkers in daily profiles (>%s samples)' % n_sam
 plt.title('#Profiles: %s | #Biomarkers: %s' % (len(data), len(data.columns[5:])))
 
 # Save
-plt.savefig('./outputs/_figures/biomarker-correlation-%s.jpg' % time.strftime("%Y%m%d%H%M%S"))
+if auto_save:
+    plt.savefig('./outputs/_figures/biomarker-correlation-%s.png' % time.strftime("%Y%m%d%H%M%S"))
 
 
 # Show
