@@ -1,5 +1,3 @@
-###############################################################################
-# Author: Bernard Hernandez
 # Date: 14/06/2018
 # Filename:
 # License:
@@ -21,9 +19,29 @@ from __future__ import division
 # Generic libraries
 import os
 import sys
+import pickle
 import warnings
 import numpy as np
 import pandas as pd
+
+# Specific
+from sklearn.model_selection import train_test_split
+
+"""
+# Estimator filepath
+path_micro = './outputs/inference-micro/svm-none-median-smote-std-skfold-21/estimators/iteration_00/estimator_00.pkl'
+path_covid = './outputs/inference-covid/svm-none-median-smote-std-skfold-21/estimators/iteration_00/estimator_00.pkl'
+
+# Load estimators
+estm_micro = pickle.load(open(path_micro, 'rb'))
+estm_covid = pickle.load(open(path_covid, 'rb'))
+
+it0_path = './outputs/inference-micro/svm-none-median-smote-std-skfold-21/iterations/iteration_00.pkl'
+
+hos = np.load('./outputs/inference-micro/svm-none-median-smote-std-skfold-21/data/HOS.npy')
+"""
+
+from sklearn.model_selection import train_test_split
 
 # Imputer
 from sklearn.impute import SimpleImputer
@@ -77,20 +95,20 @@ rfc_grid = {
 
 # Support vector machine (SVM)
 svm_grid = {
-    'C': [0.1, 1.0, 0.01],
+    'C': [1.0],
     'kernel': ['rbf'],
-    'gamma': [0.1, 1.0, 0.01],
+    'gamma': [1.0],
     'probability': [True],
     'max_iter': [-1],
 }
 
+
 # Artificial neural network (ANN)
 ann_grid = {
-    'hidden_layer_sizes': [(1,), (10,), (50,),
-                           (5, 5), (10, 10), (5, 5, 5)],
-    'activation': ['logistic', 'relu'],
+    'hidden_layer_sizes': [(10,), (50,)],
+    'activation': ['logistic'],
     'solver': ['adam'],
-    'alpha': [1., 0.1, 0.0001],
+    'alpha': [0.0001],
     'batch_size': ['auto'],
     'learning_rate': ['constant'],
     'learning_rate_init': [0.001],
@@ -114,21 +132,25 @@ _DEFAULT_FEATURES = {
     '6': sorted(['alp', 'alt', 'bil', 'cre', 'crp', 'wbc']),
     '7': sorted(['alp', 'alt', 'bil', 'cre', 'crp', 'wbc', 'pct']),
     '21': sorted(['alb', 'alp', 'alt', 'baso', 'bil', 'cl', 'cre', 'crp', 'egfr',
-                  'eos', 'k', 'ly',  'mcv', 'mono', 'mpv', 'nrbca', 'plt', 'rbc',
-                  'rdw',  'urea', 'wbc']),
+                  'eos', 'k', 'ly', 'mcv', 'mono', 'mpv', 'nrbca', 'plt', 'rbc',
+                  'rdw', 'urea', 'wbc']),
     '27': sorted(['alb', 'alp', 'alt', 'baso', 'bil', 'cl', 'cre', 'crp', 'egfr',
                   'eos', 'hct', 'hgb', 'k', 'ly', 'mch', 'mchc', 'mcv', 'mono',
                   'mpv', 'neut', 'nrbca', 'plt', 'rbc', 'rdw', 'sodium', 'urea', 'wbc'])
 }
+
 # ------------------------------
 # data constants
 # ------------------------------
 # Define feature group
-slug = '27'
+slug = '21'
 
 # Feature vector
 features = _DEFAULT_FEATURES[slug]
+
+# Targets
 target = 'micro_confirmed'
+compare = 'covid_confirmed'
 
 # ------------------------------
 # pipeline constants
@@ -142,20 +164,35 @@ outpath = './outputs'
 # Load data
 data = pd.read_csv('./data/covid19/daily_profiles.csv')
 data.columns = [c.lower() for c in data.columns]
+data = data[features + [target, compare]]
+data.covid_confirmed = data.covid_confirmed.astype(int)
+data.micro_confirmed = data.micro_confirmed.astype(int)
 
-# Create matrices
-X = data[features].to_numpy()
-y = data[target].to_numpy()
+print(data.columns)
+
+# Get x and y (y is fake)
+X_aux = data[features + [target, compare]]
+y_aux = data[target]
+
+from pyPI.preprocessing.splitters import PipelineSplitter
+
+m = PipelineSplitter().split(X_aux.to_numpy(), y_aux.to_numpy())
+
+
+#Una extra
+CVS = pd.DataFrame(m['CVS'][:,:-1], columns=features + [target, compare])
+HOS = pd.DataFrame(m['HOS'][:,:-1], columns=features + [target, compare])
+
 
 # ------------------------------
 # create pipeline
 # ------------------------------
 # Create the objects
-flt = 'iqr15'
+flt = 'none'
 imp = 'median'
 smp = 'smote'
 pre = 'std'
-spl = 'skfold'
+spl = 'kfold'
 
 # ------------------------------
 # create targets to compute
@@ -164,7 +201,7 @@ spl = 'skfold'
 estimators = ['ann']
 
 # Create tests
-tests = ['HOS', 'HOSbal']
+tests = ['HOS']
 
 # Train
 train = True
@@ -187,7 +224,7 @@ for estimator in estimators:
                                ('scaler', pre),
                                ('estimator', estimator)],
                         outpath=pipelinepath,
-                        hos_size=0.25,
+                        hos_data=HOS[features + [target]].to_numpy(),
                         verbose=5)
 
     # --------------
@@ -208,40 +245,83 @@ for estimator in estimators:
         # pipeline are saved as numpy arrays. The partitions created calling
         # this method are randomised. The datasets are HOS, HOSbal, CVS and Fn.
         # This method returns X_cvs and y_cvs.
-        pipeline.prep(X, y)
+        #pipeline.prep(CVS[features], CVS[target])
 
         # Fit the grid search estimator model
-        pipeline.fit(X=None, y=None, name='CVS', estimator_grid=estimator_grid)
+        pipeline.fit(X=CVS[features].to_numpy(),
+                     y=CVS[target].to_numpy(),
+                     estimator_grid=estimator_grid)
 
     # --------------
     # Test
     # --------------
     # Evaluate on the following sets
-    pipeline.evaluate_data(names=tests)
+    #pipeline.evaluate_data(X=HOS[features].to_numpy(),
+    #                       y=HOS[target].to_numpy())
 
-# -----------------------
-# The final results
-# -----------------------
-# Note that that the pipeline creates a folder with several objects.
-# These objects are briefly explained below. For more information
-# see url.
+    estm = pickle.load(open('%s/estimators/iteration_00/estimator_00.pkl' % pipelinepath, 'rb'))
 
-# Structure:
-# - folder
-#   |- data
-#      |- CSV
-#      |- HOS
-#      |- HOSbal
-#      |- Fn
-#   |- estimators
-#   |- iterations
-#      |- iteration_00.pkl
-#      |- iteration_0n.pkl
-#   |- summaries
-#      |- complete
-#         |- summary.csv
-#         |- summmean.csv
-#         |- summstd.csv
-#      |- partial
-#         |- summary_01.csv
-#         |- summary_0n.csv
+    pred = estm.predict_proba(HOS[features].to_numpy())
+
+    print(estm)
+    print(pred)
+
+    results = pd.DataFrame()
+    results['p1'] = pred[:,1]
+    results['covid_confirmed'] = HOS['covid_confirmed']
+    results['micro_confirmed'] = HOS['micro_confirmed']
+    results['target'] = target
+    results['type'] = None
+
+
+    results.loc[(results['p1']>0.5) & results[target]==1, 'type'] = 'TP'
+    results.loc[(results['p1']>0.5) & results[target]==0, 'type'] = 'FP'
+    results.loc[(results['p1']<0.5) & results[target]==1, 'type'] = 'FN'
+    results.loc[(results['p1']<0.5) & results[target]==0, 'type'] = 'TN'
+
+    results.to_csv('%s/results-%s.csv' % (pipelinepath, target))
+
+    import sys
+    sys.exit()
+
+    # --------------
+    # Compare
+    # --------------
+    X_hos = pd.DataFrame(hos, columns=data.columns)[features]
+    y_hos = pd.DataFrame(hos, columns=data.columns)[compare]
+    
+    # Load estimator
+    estm = pickle.load(open('%s/estimators/iteration_00/estimator_00.pkl', 'rb'))
+
+    print(estm)
+
+
+
+
+
+
+
+
+import sys
+sys.exit()
+
+# Create matrices
+X = data[features].to_numpy()
+y = data[target].to_numpy()
+
+
+
+import sys
+
+sys.exit()
+
+# Display estimator
+print("\nEstimator: \n %s" % estm_micro)
+
+data_micro = np.load('/tmp/123.npy')
+
+# Predict probabilities
+# probs = estm.predict_proba(data)
+
+#
+# print(probs)
