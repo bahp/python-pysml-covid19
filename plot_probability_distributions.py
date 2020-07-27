@@ -32,6 +32,7 @@ auto_save = False
 folder = 'svm-none-median-smote-std-kfold-21'
 folder = 'ann-none-median-smote-std-kfold-21'
 #folder = 'svm-none-median-smote-std-kfold-6'
+folder = 'svm-none-median-smote-std-kfold-21'
 
 # Read data
 data = pd.read_csv('./outputs/inference-compare/%s/results-micro_confirmed.csv' % folder)
