@@ -72,6 +72,7 @@ corr = data[biomarkers_common].corr()*100
 
 # Reorder for display purposes
 corr = corr.reindex(sorted(corr.columns), axis=1)
+corr.sort_index(axis=0, level=0, inplace=True)
 
 # Generate a mask for the upper triangle
 mask = np.triu(np.ones_like(corr, dtype=np.bool))
