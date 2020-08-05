@@ -1,0 +1,28 @@
+orderCode,orderCodeText,unit
+alb,Albumin,g/L
+alp,Alkaline Phosphatase,U/L
+alt,Alanine Transaminase,U/L
+baso,Basophils,10*9/L
+bil,Bilirubin,umol/L
+cl,Chloride,mmol/L
+cre,Creatinine,umol/L
+crp,C-Reactive Protein,mg/L
+egfr,Estimated GFR,mL/min/1.73m2
+eos,Eosinophils,10*9/L
+hct,Haematocrit,L/L
+hgb,Haemoglobin,g/L
+k,Potassium,mmol/L
+ly,Lymphocytes,10*9/L
+mch,"Mean cell haemoglobin level, blood",pg
+mchc,"Mean cell haemoglobin conc, blood",g/L
+mcv,"Mean cell volume, blood",fL
+mono,Monocytes,10*9/L
+mpv,"Mean platelet volume, blood",fL
+neut,Neutrophils,10*9/L
+nrbca,Nucleated RBCs,10*9/L
+plt,Platelets,10*9/L
+rbc,"Red blood cell count, blood",10*12/L
+rdw,Red blood cell distribution width,%
+sodium,Sodium,mmol/L
+urea,"Urea level, blood",mmol/L
+wbc,"White blood cell count, blood",10*9/L
