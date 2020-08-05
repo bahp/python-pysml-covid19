@@ -32,6 +32,8 @@ auto_save = False
 folder = 'svm-none-median-smote-std-kfold-21'
 folder = 'ann-none-median-smote-std-kfold-21'
 #folder = 'svm-none-median-smote-std-kfold-6'
+#folder = 'svm-none-median-smote-std-kfold-21'
+#folder = 'gnb-none-median-smote-std-kfold-6'
 
 # Read data
 data = pd.read_csv('./outputs/inference-compare/%s/results-micro_confirmed.csv' % folder)
@@ -52,8 +54,53 @@ dataframe.loc[(dataframe['y']==1) & (dataframe['y_pred']==0), 'type'] = 'fn'
 dataframe.loc[(dataframe['y']==0) & (dataframe['y_pred']==1), 'type'] = 'fp'
 dataframe.loc[(dataframe['y']==0) & (dataframe['y_pred']==0), 'type'] = 'tn'
 
+# ----------------------
+# Information for labels
+# ----------------------
 # Counts for the y labels
-counts = dataframe[['type', 'y_prob']].groupby(by='type').count()
+counts_covid = dataframe[['type', 'y_prob', 'covid_confirmed']] \
+    .groupby(by=['type', 'covid_confirmed']).count()
+
+# Percentages for the y labels
+percentages_covid = dataframe[['type', 'y_prob', 'covid_confirmed']].groupby(by=['type']) \
+    .apply(lambda x: 100*np.sum(x.covid_confirmed) / x.covid_confirmed.count())
+
+# Labels
+labels = pd.DataFrame()
+labels['% Covid+'] = percentages_covid
+labels['# Samples'] = \
+    dataframe[['type', 'y_prob']].groupby(by='type').count()
+
+# Show
+print("\nCounts:\n%s" % counts_covid)
+print("\nPercentages covid+:\n%s" % percentages_covid)
+print("\nLabel:\n%s" % labels)
+
+# --------------------
+# Statistical tests
+# --------------------
+# Import libraries
+from scipy import stats
+
+# Configure order
+order = ['tn', 'fn', 'fp', 'tp']
+
+# Space
+print("\n")
+
+# Loop
+for c in order:
+    v = dataframe[dataframe['type']==c]
+    v0 = v[v['covid_confirmed']==0].y_prob.values
+    v1 = v[v['covid_confirmed']==1].y_prob.values
+    print('%s: %s' % (c, stats.kstest(v0,v1)))
+    print('%s: %s' % (c, stats.mannwhitneyu(v0,v1, alternative='two-sided')))
+    print("")
+
+# if pvalue < 0.05 conclude that two groups we sampled from populations
+# with different distrbutions. This distributions might differ in median,
+# variability or shape.
+
 
 # --------------------------------------------
 # Figure
@@ -65,7 +112,9 @@ plt.figure()
 order = ['tn', 'fn', 'fp', 'tp']
 
 # The ylabels
-ylabels = ['%s (%s)'%(c, counts.loc[c, 'y_prob']) for c in order]
+ylabels = ['%4s (%-4s, %2s%%)' % (c.upper(),
+    labels.loc[c, '# Samples'],
+    round(labels.loc[c, '% Covid+'])) for c in order]
 
 # Configure seaborn.
 sns.set(style="whitegrid", palette="pastel", color_codes=True)
@@ -83,7 +132,7 @@ plt.suptitle('Probability distributions')
 plt.title('Folder: %s' % folder)
 plt.xlabel('Probability of positive outcome')
 plt.ylabel('')
-#plt.tight_layout()
+plt.tight_layout()
 
 # Save
 if auto_save:
