@@ -29,7 +29,7 @@ pd.set_option('display.precision', 4)
 auto_save = False
 
 # Select the algorithm
-folder = 'svm-none-median-smote-std-kfold-21'
+#folder = 'svm-none-median-smote-std-kfold-21'
 folder = 'ann-none-median-smote-std-kfold-21'
 #folder = 'svm-none-median-smote-std-kfold-6'
 #folder = 'svm-none-median-smote-std-kfold-21'
@@ -88,6 +88,7 @@ order = ['tn', 'fn', 'fp', 'tp']
 # Space
 print("\n")
 
+"""
 # Loop
 for c in order:
     v = dataframe[dataframe['type']==c]
@@ -96,6 +97,7 @@ for c in order:
     print('%s: %s' % (c, stats.kstest(v0,v1)))
     print('%s: %s' % (c, stats.mannwhitneyu(v0,v1, alternative='two-sided')))
     print("")
+"""
 
 # if pvalue < 0.05 conclude that two groups we sampled from populations
 # with different distrbutions. This distributions might differ in median,
@@ -106,7 +108,7 @@ for c in order:
 # Figure
 # --------------------------------------------
 # Create figure
-plt.figure()
+plt.figure(figsize=(10,8))
 
 # Configure order
 order = ['tn', 'fn', 'fp', 'tp']
@@ -132,7 +134,8 @@ plt.suptitle('Probability distributions')
 plt.title('Folder: %s' % folder)
 plt.xlabel('Probability of positive outcome')
 plt.ylabel('')
-plt.tight_layout()
+#plt.tight_layout()
+plt.subplots_adjust(left=0.2)
 
 # Save
 if auto_save:
